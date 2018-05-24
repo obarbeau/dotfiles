@@ -32,15 +32,27 @@ config push --set-upstream origin master
 config status
 ```
 
-## Restore on another computer
+## Restore on empty computer
 
-1)
 ```shell
 git clone --bare git@github.com:$USER/dotfiles.git $DOTFILES_DIR
 config config --local status.showUntrackedFiles no
+
+config checkout
+if [ $? = 0 ]; then
+  echo "Checked out config.";
+  else
+    echo "Backing up pre-existing dot files.";
+    mkdir -p $DOTFILES_DIR-backup
+    # also create eventual directory structure before moving files
+    # escape shell commands in the 'echo' so that they are evaluated by final 'bash'
+    config checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} echo "mkdir -p $DOTFILES_DIR-backup/\$(dirname {}); mv {} $DOTFILES_DIR-backup/{}" | bash
+fi;
+config checkout
 ```
 
-2)
+## Synchronize changes between installations
+
 ```shell
 config checkout
 if [ $? = 0 ]; then
@@ -55,7 +67,3 @@ fi;
 config checkout
 # Resolves possible conflicts
 ```
-
-## Synchronize changes
-
-Begin at step 2 above.
